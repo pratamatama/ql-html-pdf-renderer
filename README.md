@@ -1,51 +1,34 @@
-# ql-html-pdf-renderer README
+# QL HTML PDF Renderer
 
-This is the README for your extension "ql-html-pdf-renderer". After writing up a brief description, we recommend including the following sections.
+A VS Code extension for your stupid web-textarea based HTML PDF renderer.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
-
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+- Built-in syntax highlighting.
+- Built-in autocomplete (using emmet)
+- Live preview
+- Hot reload
+- Same feature as the original HTML PDF Renderer
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+Upgrade your VSCode to the latest version.
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+No need to tinker anything, it just works.
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+Due to the current limitation of the VSCode's / Electron's WebView, the current implementation will shows a download popup instead of displaying the content inside the `iframe`.
+
+Rendering content inside the iframe must not directly points to a PDF.
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
-
 ### 1.0.0
 
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+Initial release of QL HTML PDF Renderer
 
 ---
 
