@@ -6,7 +6,7 @@
   "name": "ql-html-pdf-renderer",
   "displayName": "QL HTML Pdf Renderer",
   "description": "A VS Code extension to replace your web-textarea-based HTML PDF renderer.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "engines": {
     "vscode": "^1.78.0"
   },
