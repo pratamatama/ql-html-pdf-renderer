@@ -1,26 +1,50 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
+import * as path from "path";
+import * as fs from "fs";
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
+const createPreview = (context: vscode.ExtensionContext) => {
+  const panel = createPanel("Preview");
+  const template = getTemplate(context);
+  panel.webview.html = template;
+  panel.webview.options = { ...panel.webview.options, enableScripts: true };
+  return panel;
+};
+
+const getTemplate = (context: vscode.ExtensionContext) => {
+  const uri = path.join(context.extensionPath, "src", "public", "index.html");
+  const filePath = vscode.Uri.file(uri);
+  return fs.readFileSync(filePath.fsPath, "utf8");
+};
+
+const createPanel = (title: string, options?: vscode.ViewColumn) => {
+  return vscode.window.createWebviewPanel(
+    title.split(" ").join("-"),
+    title,
+    options ?? { viewColumn: vscode.ViewColumn.Two, preserveFocus: true }
+  );
+};
+
 export function activate(context: vscode.ExtensionContext) {
+  context.subscriptions.push(
+    vscode.commands.registerCommand("ql-html-pdf-renderer.live-preview", () => {
+      const panel = createPreview(context);
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "ql-html-pdf-renderer" is now active!');
+      const activeEditor = vscode.window.activeTextEditor;
+      if (activeEditor) {
+        const payload = activeEditor.document.getText();
+        panel.webview.postMessage({ event: "load", payload });
+      }
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('ql-html-pdf-renderer.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from QL HTML Pdf Renderer!');
-	});
+      vscode.workspace.onDidSaveTextDocument((e) => {
+        const savedText = e.getText();
+        panel.webview.postMessage({ event: "change", payload: savedText });
+      });
 
-	context.subscriptions.push(disposable);
+      panel.webview.onDidReceiveMessage((e) => {
+        vscode.window.showErrorMessage(e.payload);
+      });
+    })
+  );
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}

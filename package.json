@@ -14,8 +14,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "ql-html-pdf-renderer.helloWorld",
-        "title": "Hello World"
+        "command": "ql-html-pdf-renderer.live-preview",
+        "title": "QL - HTML PDF Renderer: Live Preview"
       }
     ]
   },
@@ -31,19 +31,20 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.78.0",
     "@types/glob": "^8.1.0",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
+    "@types/vscode": "^1.78.0",
     "@typescript-eslint/eslint-plugin": "^5.59.1",
     "@typescript-eslint/parser": "^5.59.1",
+    "@vscode/test-electron": "^2.3.0",
     "eslint": "^8.39.0",
     "glob": "^8.1.0",
+    "html-loader": "^4.2.0",
     "mocha": "^10.2.0",
-    "typescript": "^5.0.4",
     "ts-loader": "^9.4.2",
+    "typescript": "^5.0.4",
     "webpack": "^5.81.0",
-    "webpack-cli": "^5.0.2",
-    "@vscode/test-electron": "^2.3.0"
+    "webpack-cli": "^5.0.2"
   }
 }
