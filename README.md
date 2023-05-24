@@ -1,6 +1,6 @@
 # QL HTML PDF Renderer
 
-A VS Code extension for your stupid web-textarea based HTML PDF renderer.
+A VS Code extension to replace your web-textarea-based HTML PDF renderer.
 
 ## Features
 
