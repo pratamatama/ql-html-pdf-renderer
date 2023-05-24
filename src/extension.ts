@@ -97,11 +97,13 @@ const getTemplate = () => {
           let orientation = "portrait";
           let size = "A4";
           let sizeCustom;
+          let payload;
 
           window.addEventListener("message", (e) => {
             switch (e.data.event) {
               case "load":
               case "change":
+                payload = e.data.payload
                 loadPdf();
                 break;
               default:
@@ -109,7 +111,7 @@ const getTemplate = () => {
             }
           });
 
-          const loadPdf = async () => {
+          const loadPdf = async (body) => {
             try {
               const content = document.querySelector("#content");
               const existingIframe = document.querySelector("#pdfPreview");
@@ -127,9 +129,7 @@ const getTemplate = () => {
                   orientation,
                   size,
                   sizeCustom,
-                  body: ${JSON.stringify(
-                    vscode.window.activeTextEditor?.document.getText() ?? ""
-                  )},
+                  body: payload,
                 }),
               });
 
@@ -205,11 +205,13 @@ export function activate(context: vscode.ExtensionContext) {
 
       const activeEditor = vscode.window.activeTextEditor;
       if (activeEditor) {
-        panel.webview.postMessage({ event: "load" });
+        const payload = activeEditor.document.getText();
+        panel.webview.postMessage({ event: "load", payload });
       }
 
-      vscode.workspace.onDidSaveTextDocument(() => {
-        panel.webview.postMessage({ event: "change" });
+      vscode.workspace.onDidSaveTextDocument((e) => {
+        const payload = e.getText();
+        panel.webview.postMessage({ event: "change", payload });
       });
 
       panel.webview.onDidReceiveMessage((e) => {
