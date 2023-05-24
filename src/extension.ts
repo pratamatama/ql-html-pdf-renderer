@@ -1,14 +1,14 @@
 import * as vscode from "vscode";
 
-const createPreview = (context: vscode.ExtensionContext) => {
+const createPreview = () => {
   const panel = createPanel("Preview");
-  const template = getTemplate(context);
+  const template = getTemplate();
   panel.webview.html = template;
   panel.webview.options = { ...panel.webview.options, enableScripts: true };
   return panel;
 };
 
-const getTemplate = (context: vscode.ExtensionContext) => {
+const getTemplate = () => {
   return `<!DOCTYPE html>
     <html lang="en">
       <head>
@@ -34,7 +34,7 @@ const getTemplate = (context: vscode.ExtensionContext) => {
             padding-top: 4rem;
             padding-bottom: 1rem;
             display: flex;
-            justify-content: space-between;
+            justify-content: end;
             align-items: center;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
           }
@@ -61,25 +61,28 @@ const getTemplate = (context: vscode.ExtensionContext) => {
       <body>
         <header>
           <nav class="navbar">
-            <div class="render-options">
-              <button class="btn render-options__button active">TCPDF</button>
-              <button class="btn render-options__button">DOMPDF</button>
-              <button class="btn render-options__button">NODEPDF</button>
-            </div>
             <div class="render-config">
               <select
                 id="select-orientation"
                 name="orientation"
                 class="form-control"
               >
-                <option value="P" selected>Portrait</option>
-                <option value="L">Landscape</option>
+                <option value="portrait" selected>Portrait</option>
+                <option value="landscape">Landscape</option>
               </select>
+              <select
+                id="select-size"
+                name="size"
+                class="form-control"
+              >
+                <option value="A4" selected>A4</option>
+                <option value="A5">A5</option>
+                <option value="F4">F4</option>
+              </select
               <input
-                id="input-size"
-                name="input-size"
+                id="input-size-custom"
+                name="input-size-custom"
                 type="text"
-                value="A4"
                 class="form-control"
               />
             </div>
@@ -90,26 +93,23 @@ const getTemplate = (context: vscode.ExtensionContext) => {
 
         <script>
           const vscode = acquireVsCodeApi();
-
-          let renderMode = "TCPDF";
-          let orientation = "L";
+          
+          let orientation = "portrait";
           let size = "A4";
-          let data;
+          let sizeCustom;
 
           window.addEventListener("message", (e) => {
-            const { event, payload } = (data = e.data);
-
-            switch (event) {
+            switch (e.data.event) {
               case "load":
               case "change":
-                loadPdf(payload);
+                loadPdf();
                 break;
               default:
                 break;
             }
           });
 
-          const loadPdf = async (payload) => {
+          const loadPdf = async () => {
             try {
               const content = document.querySelector("#content");
               const existingIframe = document.querySelector("#pdfPreview");
@@ -117,15 +117,8 @@ const getTemplate = (context: vscode.ExtensionContext) => {
                 content.removeChild(existingIframe);
               }
 
-              const modes = {
-                TCPDF: "tcpdf",
-                DOMPDF: "dom",
-                NODEPDF: "node",
-              };
-
-              const mode = modes[renderMode];
-              const url = "https://backend.qqltech.com/pdfrenderer/" + mode + ".php";
-              const response = await fetch(url, {
+              const url = "https://backend.qqltech.com:1962/api/pdf/render";
+              await fetch(url, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json;charset=UTF-8",
@@ -133,21 +126,19 @@ const getTemplate = (context: vscode.ExtensionContext) => {
                 body: JSON.stringify({
                   orientation,
                   size,
-                  plain: "true",
-                  data: payload,
+                  sizeCustom,
+                  body: ${JSON.stringify(
+                    vscode.window.activeTextEditor?.document.getText() ?? ""
+                  )},
                 }),
               });
 
-              const blob = await response.blob();
-              const blobs = new Blob([blob], { type: "application/pdf" });
-              const src = URL.createObjectURL(blobs);
-
-              const iframe = document.createElement("iframe");
-              iframe.setAttribute("id", "pdfPreview");
-              iframe.setAttribute("src", src);
-              iframe.style.width = "100%";
-              iframe.style.height = "90vh";
-              content.appendChild(iframe);
+              const embed = document.createElement("embed");
+              embed.setAttribute("id", "pdfPreview");
+              embed.setAttribute("src", "http://docs.google.com/gview?url=https://backend.qqltech.com:1962/storage/public/development/pdf/fly.pdf&embedded=true");
+              embed.style.width = "100%";
+              embed.style.height = "90vh";
+              content.appendChild(embed);
             } catch (e) {
               console.error(e);
               vscode.postMessage({
@@ -164,32 +155,33 @@ const getTemplate = (context: vscode.ExtensionContext) => {
           };
 
           document
-            .querySelectorAll(".render-options__button")
-            .forEach((element) => {
-              element.addEventListener("click", () => {
-                renderMode = element.innerHTML;
-                toggleRenderButtonClasses(element);
-                loadPdf(data);
-              });
-            });
-
-          document
             .querySelector("#select-orientation")
             .addEventListener("input", (e) => {
               const timer = setTimeout(() => {
                 orientation = e.target.value;
                 clearTimeout(timer);
-                loadPdf(data);
+                loadPdf();
                 console.log("orientation-changed", e.target.value);
               }, 800);
             });
 
-          document.querySelector("#input-size").addEventListener("input", (e) => {
+          document
+            .querySelector("#select-size")
+            .addEventListener("input", (e) => {
+              const timer = setTimeout(() => {
+                size = e.target.value;
+                clearTimeout(timer);
+                loadPdf();
+                console.log("size-changed", e.target.value);
+              }, 800);
+            });
+
+          document.querySelector("#input-size-custom")?.addEventListener("input", (e) => {
             const timer = setTimeout(() => {
-              size = e.target.value;
+              sizeCustom = e.target.value;
               clearTimeout(timer);
-              loadPdf(data);
-              console.log("size-changed", e.target.value);
+              loadPdf();
+              console.log("size-custom-changed", e.target.value);
             }, 800);
           });
         </script>
@@ -209,17 +201,15 @@ const createPanel = (title: string, options?: vscode.ViewColumn) => {
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("ql-html-pdf-renderer.live-preview", () => {
-      const panel = createPreview(context);
+      const panel = createPreview();
 
       const activeEditor = vscode.window.activeTextEditor;
       if (activeEditor) {
-        const payload = activeEditor.document.getText();
-        panel.webview.postMessage({ event: "load", payload });
+        panel.webview.postMessage({ event: "load" });
       }
 
-      vscode.workspace.onDidSaveTextDocument((e) => {
-        const savedText = e.getText();
-        panel.webview.postMessage({ event: "change", payload: savedText });
+      vscode.workspace.onDidSaveTextDocument(() => {
+        panel.webview.postMessage({ event: "change" });
       });
 
       panel.webview.onDidReceiveMessage((e) => {
